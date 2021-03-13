@@ -1,0 +1,55 @@
+plugins {
+    id 'application'
+}
+
+group 'site.hyboxu'
+version '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.apache.pdfbox', name: 'pdfbox', version: '2.0.22'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+application {
+    mainClass = "bookmark.Main"
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': "bookmark.Main"
+        )
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task createStartScripts(type: CreateStartScripts) {
+    outputDir = file('build/scripts')
+    mainClass = "bookmark.Main"
+    applicationName = 'pdfbookmark'
+    // bug: current version gradle make this value always be:
+    // $APP_HOME/lib/pdfbookmark-${version}.jar
+    // which APP_HOME="`pwd -P`"
+    //
+    // The suggest is changing `APP_HOME` value in scripts to:
+    // APP_HOME="`dirname "$0"`"`
+    classpath = files("lib/pdfbookmark-${version}.jar")
+}
