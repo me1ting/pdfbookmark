@@ -7,30 +7,43 @@ public class Bookmark {
     private int level;
     private String title;
     private int page;
+    private String label;
     private List<Bookmark> subs;
 
     public Bookmark() {
         this.subs = new ArrayList<>();
+        this.title = "";
+        this.label = "";
     }
 
     @Override
-    public String toString() {
+    public String toString(){
+        return "Please call toString(label)";
+    }
+
+    public String toString(boolean label) {
         var builder = new StringBuilder();
         for (var i = 0; i < level - 1; i++) {
             builder.append('\t');
         }
         builder.append(title);
         builder.append('\t');
-        builder.append(page);
+        if (label) {
+            builder.append(this.label);
+        } else {
+            builder.append(page);
+        }
         builder.append('\n');
         for (var sub : subs) {
-            builder.append(sub.toString());
+            builder.append(sub.toString(label));
         }
 
         return builder.toString();
     }
 
-    public static Bookmark fromString(String content) throws IllegalArgumentException {
+    public static Bookmark fromString(String content, boolean label) throws IllegalArgumentException {
+        Bookmark bookmark = new Bookmark();
+
         var i = 0;
         while (i < content.length() && content.charAt(i) == '\t') {
             i++;
@@ -46,18 +59,13 @@ public class Bookmark {
             i++;
         }
 
-        int page = -1;
-        if (content.charAt(i) != '-') {
-            begin = i;
-            while (i < content.length() && '0' <= content.charAt(i) && content.charAt(i) <= '9') {
-                i++;
-            }
-            page = Integer.parseInt(content.substring(begin, i));
+        if (label) {
+            bookmark.setLabel(content.substring(i));
+        } else {
+            bookmark.setPage(Integer.parseInt(content.substring(i)));
         }
 
-        Bookmark bookmark = new Bookmark();
         bookmark.setTitle(title);
-        bookmark.setPage(page);
         bookmark.setLevel(level);
 
         return bookmark;
@@ -85,6 +93,14 @@ public class Bookmark {
 
     public void setPage(int page) {
         this.page = page;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public List<Bookmark> getSubs() {

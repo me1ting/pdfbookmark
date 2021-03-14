@@ -1,17 +1,23 @@
 package bookmark;
 
-import bookmark.pdfbox.PDBookmarks;
-
-import java.util.List;
+import bookmark.pdfbox.PDBookmarkUtils;
 
 public class Main {
     public static final String BOOKMARKS_FILE_SUFFIX = ".bookmarks";
     public static final String USAGE = "PDF bookmarks management tool.\r\n" +
             "  Usage:\r\n" +
-            "    pdfbookmark load IN.pdf    load bookmarks from IN file\r\n" +
-            "    pdfbookmark save IN.pdf [OUT.pdf]    save bookmarks to IN file, save as OUT\r\n";
+            "    pdfbookmark load IN.pdf    load bookmarks from IN.pdf, save as IN.pdf.bookmarks\r\n" +
+            "    pdfbookmark save IN.pdf [OUT.pdf]    save bookmarks to IN.pdf, save as OUT.pdf\r\n";
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        try {
+            work(args);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void work(String[] args) throws Exception {
         if (args.length < 2) {
             usage();
         } else {
@@ -34,13 +40,13 @@ public class Main {
     }
 
     public static void loadBookmarks(String inFile) throws Exception {
-        List<Bookmark> bookmarks = PDBookmarks.loadFromPDF(inFile);
-        Bookmarks.saveToFile(bookmarks, inFile + BOOKMARKS_FILE_SUFFIX);
+        Bookmarks bookmarks = PDBookmarkUtils.loadFromPDF(inFile);
+        BookmarkUtils.saveToFile(bookmarks, inFile + BOOKMARKS_FILE_SUFFIX);
     }
 
     public static void saveBookmarks(String inFile, String outFile) throws Exception {
-        List<Bookmark> bookmarks = Bookmarks.loadFromFile(inFile + BOOKMARKS_FILE_SUFFIX);
-        PDBookmarks.saveToPDF(bookmarks, inFile, outFile);
+        Bookmarks bookmarks = BookmarkUtils.loadFromFile(inFile + BOOKMARKS_FILE_SUFFIX);
+        PDBookmarkUtils.saveToPDF(bookmarks, inFile, outFile);
     }
 
     private static void usage() {

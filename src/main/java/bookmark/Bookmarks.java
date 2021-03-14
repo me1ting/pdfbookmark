@@ -1,30 +1,46 @@
 package bookmark;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Bookmarks {
-    private Bookmarks() {
-    }
+    private List<Bookmark> root;
+    private int offset;
+    private boolean label;
 
-    public static List<Bookmark> fromString(String content) throws IllegalArgumentException {
+    public static Bookmarks fromString(String content) throws IllegalArgumentException {
         var scanner = new Scanner(content);
-        List<Bookmark> bookmarks = new ArrayList<>();
+        List<Bookmark> root = new ArrayList<>();
         var stack = new ArrayDeque<Bookmark>();
+        int offset = 0;
+        boolean label = false;
+
+        boolean metaEnd = false;
         while (scanner.hasNextLine()) {
             var line = scanner.nextLine();
+            if (!metaEnd) {
+                if (!line.isEmpty()&&line.charAt(0) == '@') {
+                    if (line.startsWith("@offset")) {
+                        offset = Integer.parseInt(line.substring(("@offset").length()).trim());
+                    } else if (line.startsWith("@label")) {
+                        if (line.toLowerCase().contains("true")) {
+                            label = true;
+                        }
+                    }
+                    continue;
+                } else if (line.trim().isEmpty()) {
+                    metaEnd = true;
+                }
+            }
+
             if (!line.trim().isEmpty()) {
-                var item = Bookmark.fromString(line);
+                var item = Bookmark.fromString(line, label);
                 if (item.getLevel() == 1) {
                     stack.clear();
                     stack.push(item);
-                    bookmarks.add(item);
+                    root.add(item);
                 } else {
                     while (stack.peek().getLevel() >= item.getLevel()) {
                         stack.pop();
@@ -32,9 +48,9 @@ public class Bookmarks {
                     var top = stack.peek();
                     if (top.getLevel() + 1 != item.getLevel()) {
                         throw new IllegalArgumentException(String.format(
-                                "\r\n%s\r\n, followed with \r\n%s\r\n,the level difference is bigger than 1",
-                                top.toString(),
-                                item.toString()
+                                "\r\n%s\r\n, followed with \r\n%s\r\n, the level difference is bigger than 1",
+                                top.toString(label),
+                                item.toString(label)
                         ));
                     }
                     top.getSubs().add(item);
@@ -42,23 +58,56 @@ public class Bookmarks {
                 }
             }
         }
+
+        var bookmarks = new Bookmarks();
+        bookmarks.root = root;
+        bookmarks.offset = offset;
+        bookmarks.label = label;
+
         return bookmarks;
     }
 
-    public static String toString(List<Bookmark> bookmarks) {
+    @Override
+    public String toString() {
         var builder = new StringBuilder();
-        for (var bookmark : bookmarks) {
-            builder.append(bookmark.toString());
+        if (offset != 0) {
+            builder.append("@offset ");
+            builder.append(offset);
+            builder.append("\r\n");
+        }
+        if (label) {
+            builder.append("@label ");
+            builder.append("true");
+            builder.append("\r\n");
+        }
+        builder.append("\r\n");
+        for (var bookmark : root) {
+            builder.append(bookmark.toString(label));
         }
         return builder.toString();
     }
 
-    public static List<Bookmark> loadFromFile(String file) throws IOException {
-        String content = Files.readString(Path.of(file), StandardCharsets.UTF_8);
-        return fromString(content);
+    public List<Bookmark> getRoot() {
+        return root;
     }
 
-    public static void saveToFile(List<Bookmark> bookmarks, String file) throws IOException {
-        Files.writeString(Path.of(file), toString(bookmarks), StandardCharsets.UTF_8);
+    public void setRoot(List<Bookmark> root) {
+        this.root = root;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public boolean isLabel() {
+        return label;
+    }
+
+    public void setLabel(boolean label) {
+        this.label = label;
     }
 }
