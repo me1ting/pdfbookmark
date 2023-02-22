@@ -29,7 +29,7 @@ public class Main {
                     break;
                 }
                 case "save": {
-                    var outFile = args.length > 2 ? args[2] : inFile;
+                    var outFile = args.length > 2 ? args[2] : inFile + ".saved";
                     saveBookmarks(inFile, outFile);
                     break;
                 }
