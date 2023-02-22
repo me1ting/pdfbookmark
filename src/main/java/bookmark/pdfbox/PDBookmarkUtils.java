@@ -116,6 +116,9 @@ public class PDBookmarkUtils {
 
     public static boolean checkLabel(PDDocument doc) throws IOException {
         var labels = doc.getDocumentCatalog().getPageLabels();
+        if (labels == null) {
+            return false;
+        }
         var map = labels.getLabelsByPageIndices();
         if (map == null) {
             return false;
